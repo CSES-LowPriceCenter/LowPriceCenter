@@ -25,6 +25,10 @@ app.use(
   }),
 );
 
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'healthy' });
+});
+
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/interestEmail", interestEmailRoute);

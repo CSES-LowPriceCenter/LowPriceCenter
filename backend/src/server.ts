@@ -10,16 +10,10 @@ import env from "src/util/validateEnv";
 const PORT = env.PORT;
 const MONGODB_URI = env.MONGODB_URI;
 
-console.log("Connecting to MongoDB...");
-mongoose
-  .connect(MONGODB_URI)
-  .then(() => {
-    console.log("Mongoose connected!");
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch((error) => {
-    console.error("MongoDB connection error:", error);
-  });
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
+  mongoose.connect(MONGODB_URI)
+    .then(() => console.log("Mongoose connected!"))
+    .catch(err => console.error("MongoDB connection error:", err));
+});
 
