@@ -7,9 +7,10 @@ import mongoose from "mongoose";
 import app from "src/app";
 import env from "src/util/validateEnv";
 
-const PORT = env.PORT || 5000;
+const PORT = env.PORT;
 const MONGODB_URI = env.MONGODB_URI;
 
+console.log("Connecting to MongoDB...");
 mongoose
   .connect(MONGODB_URI)
   .then(() => {
@@ -18,4 +19,7 @@ mongoose
       console.log(`Server running on port ${PORT}`);
     });
   })
-  .catch(console.error);
+  .catch((error) => {
+    console.error("MongoDB connection error:", error);
+  });
+
