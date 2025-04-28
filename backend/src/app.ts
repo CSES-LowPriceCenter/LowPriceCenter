@@ -19,10 +19,15 @@ app.use(express.json());
 // pages for more info:
 // https://expressjs.com/en/resources/middleware/cors.html
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
+
+const FRONTEND_URL = "https://low-price-center.vercel.app/"; 
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_ORIGIN,
-  }),
+    origin: FRONTEND_URL,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
 );
 
 app.get('/health', (_req, res) => {
