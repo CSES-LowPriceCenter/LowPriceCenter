@@ -20,7 +20,9 @@
   "version": "1.0.0",
   "main": "dist/server.js",
   "scripts": {
-    "start": "nodemon src/server.ts",
+    "dev": "nodemon src/server.ts",
+    "build": "tsc",
+    "start": "node --max-old-space-size=384 dist/server.js",
     "format": "npm run check-git-hooks && prettier --write .",
     "lint-fix": "npm run check-git-hooks && (eslint --fix --cache --report-unused-disable-directives . || true) && prettier --write .",
     "lint-check": "npm run check-git-hooks && eslint --cache --report-unused-disable-directives . && prettier --check .",
@@ -37,6 +39,7 @@
     "@types/http-errors": "^2.0.1",
     "@types/jsonwebtoken": "^9.0.8",
     "@types/multer": "^1.4.12",
+    "@types/node": "^22.15.2",
     "@types/nodemailer": "^6.4.17",
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^6.1.0",
@@ -51,10 +54,10 @@
     "husky": "^9.0.11",
     "nodemon": "^3.0.1",
     "prettier": "^3.0.0",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.1.6"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
   },
   "_moduleAliases": {
-    "src": "src"
+    "src": "dist"
   }
 }
