@@ -20,7 +20,7 @@ app.use(express.json());
 // https://expressjs.com/en/resources/middleware/cors.html
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
 
-const FRONTEND_URL = "https://low-price-center.vercel.app/"; 
+const FRONTEND_URL = "https://low-price-center.vercel.app"; 
 
 app.use(
   cors({
