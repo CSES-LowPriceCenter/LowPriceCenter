@@ -2,12 +2,8 @@ import { FirebaseApp, initializeApp } from "firebase/app";
 import { GoogleAuthProvider, User, getAuth, signInWithPopup, signOut } from "firebase/auth";
 import { MouseEventHandler, ReactNode, createContext, useEffect, useState } from "react";
 import { get, post } from "src/api/requests";
-
 import { firebaseConfig } from "src/utils/FirebaseConfig";
 
-/**
- * Context used by FirebaseProvider to provide app and user to pages
- */
 const FirebaseContext = createContext<{
   app: FirebaseApp | undefined;
   user: User | null;
@@ -22,11 +18,6 @@ const FirebaseContext = createContext<{
   signOutFromFirebase: () => {},
 });
 
-/**
- * Wraps children in FirebaseContext.Provider to give all
- * children access to sustained Firebase app and user
- * data.
- */
 export default function FirebaseProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -35,54 +26,80 @@ export default function FirebaseProvider({ children }: { children: ReactNode }) 
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
 
-  /*sign in*/
-  async function openGoogleAuthentication() {
-    await signInWithPopup(auth, provider).catch((error) => {
-      console.error(error);
-    });
-  }
+  // Improved sign-in with better error handling
+  const openGoogleAuthentication = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      // Immediately get the ID token
+      const token = await result.user.getIdToken();
+      return token;
+    } catch (error) {
+      console.error("Authentication error:", error);
+      throw error;
+    }
+  };
 
-  /*sign out*/
-  async function signOutFromFirebase() {
-    await signOut(auth);
-    window.location.href = "/";
-  }
+  // More robust sign-out
+  const signOutFromFirebase = async () => {
+    try {
+      await signOut(auth);
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
+  };
 
-  /**
-   * Tracks when the user logs in and out to change
-   * the state of the user.
-   */
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (u) => {
-      if (!u) setUser(null);
-      else {
-        await get(`/api/users/${u.uid}`)
-          .then(() => {
-            setUser(u);
-          })
-          .catch(async (e) => {
-            if (e.message === '404 Not Found: {"message":"User not found"}') {
-              await post(`/api/users`, { firebaseUid: u.uid })
-                .then(() => {
-                  setUser(u);
-                })
-                .catch((e2) => {
-                  signOutFromFirebase();
-                  console.error(e2);
-                });
-            } else {
-              signOutFromFirebase();
-            }
-          });
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+      if (!firebaseUser) {
+        setUser(null);
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      try {
+        // Get the user's ID token
+        const token = await firebaseUser.getIdToken();
+        
+        // Try to get user data from backend
+        const userData = await get(`/api/users/${firebaseUser.uid}`, {
+          Authorization: `Bearer ${token}`
+        });
+
+        // If user exists in backend
+        if (userData) {
+          setUser(firebaseUser);
+        } else {
+          // Create new user if doesn't exist
+          await post(`/api/users`, {
+            firebaseUid: firebaseUser.uid,
+            idToken: token
+          }, {
+            Authorization: `Bearer ${token}`
+          });
+          setUser(firebaseUser);
+        }
+      } catch (error) {
+        console.error("User authentication flow error:", error);
+        // Graceful fallback - sign out if there's an error
+        await signOut(auth);
+      } finally {
+        setLoading(false);
+      }
     });
+
     return unsubscribe;
   }, []);
 
   return (
     <FirebaseContext.Provider
-      value={{ app, user, loading, openGoogleAuthentication, signOutFromFirebase }}
+      value={{ 
+        app, 
+        user, 
+        loading, 
+        openGoogleAuthentication, 
+        signOutFromFirebase 
+      }}
     >
       {children}
     </FirebaseContext.Provider>
