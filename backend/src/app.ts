@@ -25,10 +25,17 @@ const FRONTEND_URL = "https://low-price-center.vercel.app";
 app.use(
   cors({
     origin: FRONTEND_URL,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+app.use((_req, res, next) => {
+  res.header("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  res.header("Cross-Origin-Embedder-Policy", "unsafe-none");
+  next();
+});
 
 app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'healthy' });

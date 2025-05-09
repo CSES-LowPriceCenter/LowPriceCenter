@@ -15,11 +15,27 @@ export const getUsers = async (req: Request, res: Response) => {
 export const getUserById = async (req: Request, res: Response) => {
   try {
     const firebaseUid = req.params.firebaseUid;
+    
+    // First try to find existing user
+    let user = await UserModel.findOne({ firebaseUid });
 
-    const user = await UserModel.findOne({ firebaseUid: firebaseUid });
-
+    // If user doesn't exist, create them
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      const firebaseUser = await getAuth().getUser(firebaseUid);
+      
+      if (!firebaseUser.email?.endsWith("@ucsd.edu")) {
+        return res.status(403).json({ message: "Only UCSD emails allowed" });
+      }
+
+      user = new UserModel({
+        userEmail: firebaseUser.email,
+        displayName: firebaseUser.displayName || "",
+        activeUser: true,
+        firebaseUid,
+        lastLogin: new Date()
+      });
+
+      await user.save();
     }
 
     return res.status(200).json(user);
